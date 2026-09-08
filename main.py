@@ -1,12 +1,11 @@
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 import io
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageOps
 
 app = FastAPI()
 
-# السماح للاتصال من أي موقع (مثل GitHub Pages الخاص بك)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,7 +16,7 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"status": "AI Server is running!"}
+    return {"status": "Real AI Image Processing Server is running!"}
 
 @app.post("/process-image")
 async def process_image(
@@ -25,26 +24,48 @@ async def process_image(
     prompt: str = Form(...)
 ):
     try:
-        # قراءة الصورة المرسلة من جهازك عبر الموقع
+        # قراءة الصورة المرفوعة
         contents = await image.read()
-        img = Image.open(io.BytesIO(contents))
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
         
-        # -------------------------------------------------------------
-        # هنا يتم تطبيق الذكاء الاصطناعي أو المعالجة بناءً على النص (prompt)
-        # -------------------------------------------------------------
-        # حالياً كمثال تجريبي، سنقوم بعكس ألوان الصورة أو تطبيق تعديل بسيط،
-        # ويمكنك هنا ربط أي نموذج ذكاء اصطناعي تريده (مثل Stable Diffusion محلياً أو API خارجي).
+        prompt_lower = prompt.lower()
         
-        # مثال لتعديل تجريبي (تحويل الصورة إلى الأبيض والأسود إذا طلب المستخدم):
-        if "أبيض وأسود" in prompt or "grayscale" in prompt.lower():
-            img = img.convert("L")
+        # تنفيذ التعديلات بناءً على كتابتك في الموقع
+        if "أبيض وأسود" in prompt or "grayscale" in prompt_lower:
+            img = ImageOps.grayscale(img).convert("RGB")
+            
+        elif "عكس" in prompt or "inhibit" in prompt_lower or "negative" in prompt_lower:
+            img = ImageOps.invert(img)
+            
+        elif "تفتيح" in prompt or "bright" in prompt_lower:
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(1.5) # زيادة السطوع بنسبة 50%
+            
+        elif "تغميق" in prompt or "dark" in prompt_lower:
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(0.5)
+            
+        elif "تباين" in prompt or "contrast" in prompt_lower:
+            enhancer = ImageEnhance.Contrast(img)
+            img = enhancer.enhance(2.0)
+            
+        elif "تدوير" in prompt or "rotate" in prompt_lower:
+            img = img.rotate(90, expand=True)
+            
+        elif "قلب" in prompt or "mirror" in prompt_lower:
+            img = ImageOps.mirror(img)
+            
+        else:
+            # إذا كتب أي أمر آخر، سنقوم بزيادة تشبع الألوان كافتراضي للتعديل
+            enhancer = ImageEnhance.Color(img)
+            img = enhancer.enhance(1.8)
 
-        # حفظ النتيجة المؤقتة لإرجاعها
+        # حفظ الصورة المعدلة وإرجاعها مباشرة للموقع لعرضها
         output_buffer = io.BytesIO()
         img.save(output_buffer, format="JPEG")
         output_buffer.seek(0)
         
-        return {"message": "تم معالجة الصورة بنجاح بناءً على طلبك: " + prompt}
+        return StreamingResponse(output_buffer, media_type="image/jpeg")
     
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return {"error": str(e)}
