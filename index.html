@@ -40,16 +40,6 @@
             font-size: 15px;
         }
 
-        .server-config input {
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            color: #c9d1d9;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            width: 250px;
-        }
-
         .main-layout {
             display: flex;
             flex: 1;
@@ -282,9 +272,7 @@
         <div class="logo-area">
             <span>⚡ PixelCraft AI</span>
         </div>
-        <div class="server-config">
-            <input type="text" id="serverUrl" placeholder="رابط سيرفر Render (مثال: https://xxx.onrender.com)">
-        </div>
+        <div style="font-size: 12px; color: #8b949e;">المشاريع الأخيرة</div>
     </div>
 
     <div class="main-layout">
@@ -326,9 +314,9 @@
         </div>
 
         <div class="preview-area">
-            <div class="preview-header">المشاريع الأخيرة</div>
+            <div class="preview-header">معاينة النتيجة</div>
             <div class="canvas-box">
-                <div class="placeholder-text" id="placeholderText">قم برفع صورة وكتابة التعليمات للبدء</div>
+                <div class="placeholder-text" id="placeholderText">قم بررفع صورة وكتابة التعليمات للبدء</div>
                 <img id="imagePreview" alt="معاينة الصورة المعدلة">
                 <div class="status-badge" id="statusBadge">جاري المعالجة...</div>
             </div>
@@ -343,6 +331,9 @@
     </div>
 
     <script>
+        // رابط السيرفر مثبت تلقائياً في الخلفية
+        const SERVER_URL = 'https://ai-qjpp.onrender.com';
+
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const placeholderText = document.getElementById('placeholderText');
@@ -371,14 +362,9 @@
         });
 
         async function sendToAI() {
-            const serverUrl = document.getElementById('serverUrl').value.trim();
             const prompt = document.getElementById('promptInput').value.trim();
             const file = imageInput.files[0];
 
-            if (!serverUrl) {
-                alert('الرجاء إدخال رابط سيرفر Render الخاص بك في الأعلى!');
-                return;
-            }
             if (!file) {
                 alert('الرجاء اختيار صورة أولاً!');
                 return;
@@ -396,7 +382,7 @@
             formData.append('prompt', prompt);
 
             try {
-                const response = await fetch(serverUrl.replace(/\/$/, "") + '/process-image', {
+                const response = await fetch(SERVER_URL + '/process-image', {
                     method: 'POST',
                     body: formData
                 });
@@ -404,14 +390,14 @@
                 if (response.ok) {
                     const imageBlob = await response.blob();
                     const imageObjectURL = URL.createObjectURL(imageBlob);
-                    imagePreview.src = imageObjectURL; // عرض الصورة المعدلة القادمة من السيرفر مباشرة
+                    imagePreview.src = imageObjectURL;
                     statusBadge.textContent = '✅ تم تعديل الصورة بنجاح!';
                 } else {
                     const result = await response.json();
                     statusBadge.textContent = '❌ خطأ: ' + (result.error || 'فشل المعالجة');
                 }
             } catch (error) {
-                statusBadge.textContent = '❌ فشل الاتصال بالسيرفر أو الرابط غير صحيح';
+                statusBadge.textContent = '❌ فشل الاتصال بالسيرفر';
                 console.error(error);
             }
         }
