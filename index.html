@@ -21,7 +21,6 @@
             overflow: hidden;
         }
 
-        /* شريط العنوان العلوي */
         .top-navbar {
             height: 48px;
             background-color: #161b22;
@@ -41,12 +40,6 @@
             font-size: 15px;
         }
 
-        .server-config {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         .server-config input {
             background-color: #0d1117;
             border: 1px solid #30363d;
@@ -57,14 +50,12 @@
             width: 250px;
         }
 
-        /* تخطيط التطبيق الرئيسي */
         .main-layout {
             display: flex;
             flex: 1;
             height: calc(100vh - 48px);
         }
 
-        /* القائمة الجانبية اليسرى (الأيقونات) */
         .sidebar-icons {
             width: 60px;
             background-color: #161b22;
@@ -90,7 +81,6 @@
             background-color: #21262d;
         }
 
-        /* لوحة التحكم (اللوحة اليسرى الوسطى) */
         .control-panel {
             width: 420px;
             background-color: #161b22;
@@ -226,7 +216,6 @@
             background-color: #30363d;
         }
 
-        /* مساحة المعاينة الرئيسية (اليمين) */
         .preview-area {
             flex: 1;
             background-color: #0d1117;
@@ -272,13 +261,14 @@
         .status-badge {
             position: absolute;
             bottom: 20px;
-            background-color: rgba(22, 27, 34, 0.9);
+            background-color: rgba(22, 27, 34, 0.95);
             border: 1px solid #30363d;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 13px;
             color: #58a6ff;
             display: none;
+            z-index: 10;
         }
 
         input[type="file"] {
@@ -288,7 +278,6 @@
 </head>
 <body>
 
-    <!-- الشريط العلوي -->
     <div class="top-navbar">
         <div class="logo-area">
             <span>⚡ PixelCraft AI</span>
@@ -298,14 +287,10 @@
         </div>
     </div>
 
-    <!-- التخطيط الرئيسي -->
     <div class="main-layout">
-
-        <!-- لوحة التحكم -->
         <div class="control-panel">
             <div class="panel-title">تحرير الصور</div>
 
-            <!-- رفع الصورة -->
             <div class="upload-box" onclick="document.getElementById('imageInput').click()">
                 <div class="upload-btn-text">رفع صورة</div>
                 <div class="upload-sub" id="uploadSubText">الدعم: JPG, PNG (الحد الأقصى 10 ميجابايت)</div>
@@ -317,19 +302,16 @@
                 <span id="fileSize" style="color: #8b949e;">0 ميجابايت</span>
             </div>
 
-            <!-- تعليمات التعديل -->
             <div class="input-group">
                 <label>تعليمات التعديل</label>
-                <textarea id="promptInput" placeholder="اكتب تعليمات التعديل الخاصة بك هنا (مثل: 'إزالة الخلفية'، 'تغيير الإضاءة إلى غروب'، 'إضافة مرشح عتيق')..."></textarea>
+                <textarea id="promptInput" placeholder="اكتب تعليمات التعديل (مثل: 'أبيض وأسود'، 'تفتيح'، 'عكس'، 'تباين')..."></textarea>
             </div>
 
-            <!-- القوة -->
             <div class="slider-group">
                 <span>القوة (Strength)</span>
                 <span style="color: #58a6ff;">65%</span>
             </div>
 
-            <!-- النموذج -->
             <div class="input-group">
                 <label>النموذج</label>
                 <div style="background-color: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 6px; font-size: 13px;">
@@ -337,31 +319,27 @@
                 </div>
             </div>
 
-            <!-- الأزرار -->
             <div class="action-buttons">
                 <button class="btn-generate" onclick="sendToAI()">توليد</button>
                 <button class="btn-reset" onclick="resetForm()">إعادة تعيين</button>
             </div>
         </div>
 
-        <!-- معاينة الصورة -->
         <div class="preview-area">
             <div class="preview-header">المشاريع الأخيرة</div>
             <div class="canvas-box">
-                <div class="placeholder-text" id="placeholderText">قم بررفع صورة وكتابة التعليمات للبدء</div>
-                <img id="imagePreview" alt="معاينة الصورة">
+                <div class="placeholder-text" id="placeholderText">قم برفع صورة وكتابة التعليمات للبدء</div>
+                <img id="imagePreview" alt="معاينة الصورة المعدلة">
                 <div class="status-badge" id="statusBadge">جاري المعالجة...</div>
             </div>
         </div>
 
-        <!-- القائمة الجانبية للأيقونات -->
         <div class="sidebar-icons">
             <div class="sidebar-icon active">🏠</div>
             <div class="sidebar-icon">🕒</div>
             <div class="sidebar-icon">⚙️</div>
             <div class="sidebar-icon">👤</div>
         </div>
-
     </div>
 
     <script>
@@ -411,7 +389,7 @@
             }
 
             statusBadge.style.display = 'block';
-            statusBadge.textContent = '⏳ جاري المعالجة بواسطة السيرفر...';
+            statusBadge.textContent = '⏳ جاري إرسال المعالجة للسيرفر...';
 
             const formData = new FormData();
             formData.append('image', file);
@@ -423,15 +401,17 @@
                     body: formData
                 });
 
-                const result = await response.json();
-
                 if (response.ok) {
-                    statusBadge.textContent = '✅ ' + result.message;
+                    const imageBlob = await response.blob();
+                    const imageObjectURL = URL.createObjectURL(imageBlob);
+                    imagePreview.src = imageObjectURL; // عرض الصورة المعدلة القادمة من السيرفر مباشرة
+                    statusBadge.textContent = '✅ تم تعديل الصورة بنجاح!';
                 } else {
+                    const result = await response.json();
                     statusBadge.textContent = '❌ خطأ: ' + (result.error || 'فشل المعالجة');
                 }
             } catch (error) {
-                statusBadge.textContent = '❌ فشل الاتصال بالسيرفر';
+                statusBadge.textContent = '❌ فشل الاتصال بالسيرفر أو الرابط غير صحيح';
                 console.error(error);
             }
         }
