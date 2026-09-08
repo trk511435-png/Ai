@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelCraft AI - محرر الصور</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* شريط العنوان العلوي */
+        .top-navbar {
+            height: 48px;
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: #58a6ff;
+            font-size: 15px;
+        }
+
+        .server-config {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .server-config input {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            width: 250px;
+        }
+
+        /* تخطيط التطبيق الرئيسي */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 48px);
+        }
+
+        /* القائمة الجانبية اليسرى (الأيقونات) */
+        .sidebar-icons {
+            width: 60px;
+            background-color: #161b22;
+            border-left: 1px solid #30363d;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 20px;
+        }
+
+        .sidebar-icon {
+            color: #8b949e;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .sidebar-icon:hover, .sidebar-icon.active {
+            color: #58a6ff;
+            background-color: #21262d;
+        }
+
+        /* لوحة التحكم (اللوحة اليسرى الوسطى) */
+        .control-panel {
+            width: 420px;
+            background-color: #161b22;
+            border-left: 1px solid #30363d;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .upload-box {
+            background-color: #21262d;
+            border: 2px dashed #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload-box:hover {
+            border-color: #58a6ff;
+        }
+
+        .upload-btn-text {
+            background-color: #1f6feb;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .upload-sub {
+            font-size: 11px;
+            color: #8b949e;
+        }
+
+        .file-info {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #8b949e;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            color: #c9d1d9;
+            font-size: 13px;
+            resize: none;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        .slider-group span {
+            font-size: 13px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-generate {
+            flex: 2;
+            background-color: #1f6feb;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-generate:hover {
+            background-color: #388bfd;
+        }
+
+        .btn-reset {
+            flex: 1;
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-reset:hover {
+            background-color: #30363d;
+        }
+
+        /* مساحة المعاينة الرئيسية (اليمين) */
+        .preview-area {
+            flex: 1;
+            background-color: #0d1117;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            position: relative;
+        }
+
+        .preview-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+
+        .canvas-box {
+            flex: 1;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none;
+            border-radius: 8px;
+        }
+
+        .placeholder-text {
+            color: #8b949e;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .status-badge {
+            position: absolute;
+            bottom: 20px;
+            background-color: rgba(22, 27, 34, 0.9);
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #58a6ff;
+            display: none;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- الشريط العلوي -->
+    <div class="top-navbar">
+        <div class="logo-area">
+            <span>⚡ PixelCraft AI</span>
+        </div>
+        <div class="server-config">
+            <input type="text" id="serverUrl" placeholder="رابط سيرفر Render (مثال: https://xxx.onrender.com)">
+        </div>
+    </div>
+
+    <!-- التخطيط الرئيسي -->
+    <div class="main-layout">
+
+        <!-- لوحة التحكم -->
+        <div class="control-panel">
+            <div class="panel-title">تحرير الصور</div>
+
+            <!-- رفع الصورة -->
+            <div class="upload-box" onclick="document.getElementById('imageInput').click()">
+                <div class="upload-btn-text">رفع صورة</div>
+                <div class="upload-sub" id="uploadSubText">الدعم: JPG, PNG (الحد الأقصى 10 ميجابايت)</div>
+            </div>
+            <input type="file" id="imageInput" accept="image/*">
+
+            <div class="file-info" id="fileInfoBox" style="display: none;">
+                <span id="fileName">الصورة المحددة</span>
+                <span id="fileSize" style="color: #8b949e;">0 ميجابايت</span>
+            </div>
+
+            <!-- تعليمات التعديل -->
+            <div class="input-group">
+                <label>تعليمات التعديل</label>
+                <textarea id="promptInput" placeholder="اكتب تعليمات التعديل الخاصة بك هنا (مثل: 'إزالة الخلفية'، 'تغيير الإضاءة إلى غروب'، 'إضافة مرشح عتيق')..."></textarea>
+            </div>
+
+            <!-- القوة -->
+            <div class="slider-group">
+                <span>القوة (Strength)</span>
+                <span style="color: #58a6ff;">65%</span>
+            </div>
+
+            <!-- النموذج -->
+            <div class="input-group">
+                <label>النموذج</label>
+                <div style="background-color: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 6px; font-size: 13px;">
+                    بيكسل كرافت v3
+                </div>
+            </div>
+
+            <!-- الأزرار -->
+            <div class="action-buttons">
+                <button class="btn-generate" onclick="sendToAI()">توليد</button>
+                <button class="btn-reset" onclick="resetForm()">إعادة تعيين</button>
+            </div>
+        </div>
+
+        <!-- معاينة الصورة -->
+        <div class="preview-area">
+            <div class="preview-header">المشاريع الأخيرة</div>
+            <div class="canvas-box">
+                <div class="placeholder-text" id="placeholderText">قم بررفع صورة وكتابة التعليمات للبدء</div>
+                <img id="imagePreview" alt="معاينة الصورة">
+                <div class="status-badge" id="statusBadge">جاري المعالجة...</div>
+            </div>
+        </div>
+
+        <!-- القائمة الجانبية للأيقونات -->
+        <div class="sidebar-icons">
+            <div class="sidebar-icon active">🏠</div>
+            <div class="sidebar-icon">🕒</div>
+            <div class="sidebar-icon">⚙️</div>
+            <div class="sidebar-icon">👤</div>
+        </div>
+
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const placeholderText = document.getElementById('placeholderText');
+        const fileInfoBox = document.getElementById('fileInfoBox');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadSubText = document.getElementById('uploadSubText');
+        const statusBadge = document.getElementById('statusBadge');
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / (1024 * 1024)).toFixed(1) + ' ميجابايت';
+                fileInfoBox.style.display = 'flex';
+                uploadSubText.textContent = "تم اختيار الصورة بنجاح";
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    placeholderText.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function sendToAI() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const prompt = document.getElementById('promptInput').value.trim();
+            const file = imageInput.files[0];
+
+            if (!serverUrl) {
+                alert('الرجاء إدخال رابط سيرفر Render الخاص بك في الأعلى!');
+                return;
+            }
+            if (!file) {
+                alert('الرجاء اختيار صورة أولاً!');
+                return;
+            }
+            if (!prompt) {
+                alert('الرجاء كتابة تعليمات التعديل!');
+                return;
+            }
+
+            statusBadge.style.display = 'block';
+            statusBadge.textContent = '⏳ جاري المعالجة بواسطة السيرفر...';
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('prompt', prompt);
+
+            try {
+                const response = await fetch(serverUrl.replace(/\/$/, "") + '/process-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusBadge.textContent = '✅ ' + result.message;
+                } else {
+                    statusBadge.textContent = '❌ خطأ: ' + (result.error || 'فشل المعالجة');
+                }
+            } catch (error) {
+                statusBadge.textContent = '❌ فشل الاتصال بالسيرفر';
+                console.error(error);
+            }
+        }
+
+        function resetForm() {
+            imageInput.value = '';
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            placeholderText.style.display = 'block';
+            fileInfoBox.style.display = 'none';
+            document.getElementById('promptInput').value = '';
+            statusBadge.style.display = 'none';
+            uploadSubText.textContent = "الدعم: JPG, PNG (الحد الأقصى 10 ميجابايت)";
+        }
+    </script>
+</body>
+</html>
